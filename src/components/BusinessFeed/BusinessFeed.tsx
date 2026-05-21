@@ -22,11 +22,22 @@ type Business = {
 
 const PAGE = 12;
 
-export default function BusinessFeed({ initial }: { initial: Business[] }) {
+export default function BusinessFeed({
+  initial,
+  neighborhoodIds,
+}: {
+  initial: Business[];
+  neighborhoodIds?: string[];
+}) {
   const [items, setItems] = useState<Business[]>(initial);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(initial.length < PAGE);
   const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setItems(initial);
+    setDone(initial.length < PAGE);
+  }, [neighborhoodIds?.join(",")]);
 
   useEffect(() => {
     if (done) return;
@@ -45,7 +56,14 @@ export default function BusinessFeed({ initial }: { initial: Business[] }) {
   const loadMore = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/businesses?offset=${items.length}&limit=${PAGE}`);
+      const params = new URLSearchParams({
+        offset: String(items.length),
+        limit: String(PAGE),
+      });
+      if (neighborhoodIds && neighborhoodIds.length > 0) {
+        params.set("neighborhoodIds", neighborhoodIds.join(","));
+      }
+      const res = await fetch(`/api/businesses?${params.toString()}`);
       const next: Business[] = await res.json();
       if (next.length < PAGE) setDone(true);
       setItems((prev) => {
@@ -94,7 +112,6 @@ export default function BusinessFeed({ initial }: { initial: Business[] }) {
         ))}
       </div>
 
-      {/* Sentinel + loader */}
       {!done && (
         <div ref={sentinelRef} style={{ display: "flex", justifyContent: "center", padding: "2rem 0" }}>
           {loading && <Loader2 size={28} style={{ color: "var(--primary)", animation: "spin 1s linear infinite" }} />}

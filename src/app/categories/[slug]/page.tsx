@@ -14,26 +14,27 @@ export default async function CategoryPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ bairro?: string }>;
+  searchParams: Promise<{ bairros?: string }>;
 }) {
   const { slug } = await params;
-  const { bairro } = await searchParams;
+  const { bairros } = await searchParams;
+
+  const activeSlugs = bairros ? bairros.split(",").filter(Boolean) : [];
 
   let data;
   let neighborhoods;
   try {
-    let neighborhoodId: string | undefined;
-    if (bairro) {
-      const { data: hood } = await supabase
+    let neighborhoodIds: string[] | undefined;
+    if (activeSlugs.length > 0) {
+      const { data: hoods } = await supabase
         .from("neighborhoods")
-        .select("id")
-        .eq("slug", bairro)
-        .eq("is_active", true)
-        .single();
-      neighborhoodId = hood?.id;
+        .select("id, slug")
+        .in("slug", activeSlugs)
+        .eq("is_active", true);
+      neighborhoodIds = (hoods ?? []).map((h: { id: string }) => h.id);
     }
     [data, neighborhoods] = await Promise.all([
-      getBusinessesByCategory(slug, neighborhoodId),
+      getBusinessesByCategory(slug, neighborhoodIds),
       getNeighborhoods(),
     ]);
   } catch {
@@ -54,13 +55,13 @@ export default async function CategoryPage({
         </h1>
         <p style={{ color: "var(--text-muted)", marginBottom: "2rem" }}>
           {businesses.length} estabelecimento{businesses.length !== 1 ? "s" : ""}
-          {bairro ? ` no bairro selecionado` : " nesta categoria"}.
+          {activeSlugs.length > 0 ? ` no${activeSlugs.length > 1 ? "s" : ""} bairro${activeSlugs.length > 1 ? "s" : ""} selecionado${activeSlugs.length > 1 ? "s" : ""}` : " nesta categoria"}.
         </p>
 
         <Suspense fallback={null}>
           <NeighborhoodFilter
             neighborhoods={neighborhoods}
-            active={bairro ?? null}
+            active={activeSlugs}
           />
         </Suspense>
 
@@ -97,7 +98,7 @@ export default async function CategoryPage({
         {businesses.length === 0 && (
           <div style={{ textAlign: "center", padding: "5rem 0" }}>
             <p style={{ color: "var(--text-muted)" }}>
-              Nenhum estabelecimento encontrado{bairro ? " neste bairro" : ""}.
+              Nenhum estabelecimento encontrado{activeSlugs.length > 0 ? " nos bairros selecionados" : ""}.
             </p>
             <Link href="/" className="gradient-text" style={{ fontWeight: 600, marginTop: "1rem", display: "inline-block" }}>
               Voltar para o início

@@ -72,20 +72,28 @@ export async function getFeaturedBusinesses() {
   return data;
 }
 
-export async function getBusinessesPaginated(offset = 0, limit = 12) {
-  const { data, error } = await supabase
+export async function getBusinessesPaginated(offset = 0, limit = 12, neighborhoodIds?: string[]) {
+  let query = supabase
     .from("businesses")
     .select("id, name, slug, description, image_url, rating, discount_label, featured, categories(name), neighborhoods(name, slug)")
     .order("featured", { ascending: false })
     .order("name")
     .range(offset, offset + limit - 1);
+
+  if (neighborhoodIds && neighborhoodIds.length === 1) {
+    query = query.eq("neighborhood_id", neighborhoodIds[0]);
+  } else if (neighborhoodIds && neighborhoodIds.length > 1) {
+    query = query.in("neighborhood_id", neighborhoodIds);
+  }
+
+  const { data, error } = await query;
   if (error) throw error;
   return data ?? [];
 }
 
 export async function getBusinessesByCategory(
   categorySlug: string,
-  neighborhoodId?: string,
+  neighborhoodIds?: string[],
 ) {
   const { data: catData, error: catError } = await supabase
     .from("categories")
@@ -99,7 +107,11 @@ export async function getBusinessesByCategory(
     .select("*, categories(name), neighborhoods(name, slug)")
     .eq("category_id", catData.id);
 
-  if (neighborhoodId) query = query.eq("neighborhood_id", neighborhoodId);
+  if (neighborhoodIds && neighborhoodIds.length === 1) {
+    query = query.eq("neighborhood_id", neighborhoodIds[0]);
+  } else if (neighborhoodIds && neighborhoodIds.length > 1) {
+    query = query.in("neighborhood_id", neighborhoodIds);
+  }
 
   const { data, error } = await query.order("name");
   if (error) throw error;
