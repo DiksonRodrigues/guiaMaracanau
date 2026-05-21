@@ -56,9 +56,9 @@ export default async function SupermarketDetailPage({ params }: { params: Promis
 
       {/* ── Hero ── */}
       <div className={styles.hero}>
-        {supermarket.logo_url ? (
+        {(supermarket.cover_url || supermarket.logo_url) ? (
           <Image
-            src={supermarket.logo_url}
+            src={supermarket.cover_url || supermarket.logo_url}
             alt={supermarket.name}
             fill
             sizes="100vw"
