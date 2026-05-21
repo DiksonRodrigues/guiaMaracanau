@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 
-export async function uploadImage(file: File, folder: "businesses" | "products" | "supermarkets" | "flyers"): Promise<string> {
+export async function uploadImage(file: File, folder: "businesses" | "products" | "supermarkets" | "supermarkets/covers" | "flyers"): Promise<string> {
   const ext = file.name.split(".").pop();
   const name = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 

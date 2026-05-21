@@ -4,6 +4,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Upload, X, Plus, Trash2 } from "lucide-react";
 import { uploadImage } from "@/lib/storage";
+
+async function uploadFlyerPage(file: File): Promise<string> {
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("folder", "flyers");
+  const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+  if (!res.ok) throw new Error((await res.json()).error ?? "Erro no upload");
+  return (await res.json()).url;
+}
 import styles from "../../../admin.module.css";
 
 type Highlight = {
@@ -43,6 +52,7 @@ export default function FlyerForm({
   );
   const [highlights, setHighlights] = useState<Highlight[]>(initial?.flyer_highlights ?? []);
   const [uploadingPage, setUploadingPage] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -53,13 +63,19 @@ export default function FlyerForm({
     const files = Array.from(e.target.files ?? []);
     if (!files.length) return;
     setUploadingPage(true);
+    setUploadProgress(`0/${files.length}`);
     try {
-      const urls = await Promise.all(files.map((f) => uploadImage(f, "flyers")));
+      const urls: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        setUploadProgress(`${i + 1}/${files.length}`);
+        urls.push(await uploadFlyerPage(files[i]));
+      }
       setForm((prev) => ({ ...prev, pages: [...prev.pages, ...urls] }));
     } catch (err: any) {
       setError(err.message);
     } finally {
       setUploadingPage(false);
+      setUploadProgress("");
       e.target.value = "";
     }
   };
@@ -204,13 +220,13 @@ export default function FlyerForm({
 
         <label className={`${styles.btn} ${styles.btnOutline}`} style={{ cursor: "pointer", width: "fit-content" }}>
           {uploadingPage
-            ? <><Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> Enviando...</>
+            ? <><Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> Otimizando {uploadProgress}...</>
             : <><Upload size={14} /> Adicionar páginas</>}
           <input type="file" accept="image/*" multiple onChange={handlePageUpload} style={{ display: "none" }} disabled={uploadingPage} />
         </label>
         <p style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "0.5rem" }}>
           Selecione múltiplas imagens de uma vez. Ordem de upload = ordem das páginas.<br />
-          Padrão: <strong>900×1200px (retrato), WebP, &lt;500KB por página.</strong>
+          As imagens são <strong>automaticamente otimizadas</strong> para 900×1200px WebP com nitidez melhorada.
         </p>
       </div>
 
