@@ -53,42 +53,52 @@ export default async function SupermarketDetailPage({ params }: { params: Promis
 
   return (
     <div className={styles.page}>
-      <div className="container">
-        <Link href="/supermercados" className={styles.back}>
-          <ArrowLeft size={18} /> Todos os supermercados
-        </Link>
 
-        {/* ── Header ── */}
-        <header className={`${styles.header} glass-card`}>
-          <div className={styles.headerInner}>
-            <div className={styles.headerLogo}>
-              {supermarket.logo_url
-                ? <div className={styles.logoWrap}>
-                    <Image src={supermarket.logo_url} alt={supermarket.name} fill sizes="88px" style={{ objectFit: "contain" }} />
-                  </div>
-                : <div className={styles.logoPlaceholder}><ShoppingCart size={28} /></div>}
-            </div>
-            <div className={styles.headerInfo}>
-              <h1 className={styles.name}>{supermarket.name}</h1>
-              <div className={styles.meta}>
-                {supermarket.address && (
-                  <span className={styles.metaItem}><MapPin size={14} /> {supermarket.address}</span>
-                )}
-                {supermarket.phone && (
-                  <span className={styles.metaItem}><Phone size={14} /> {supermarket.phone}</span>
-                )}
-                {flyer && (
-                  <span className={`${styles.metaItem} ${styles.metaFlyer}`}>
-                    <CalendarDays size={14} /> Encarte válido: {formatDateRange(flyer.valid_from, flyer.valid_until)}
-                  </span>
-                )}
-              </div>
-              {supermarket.description && (
-                <p className={styles.desc}>{supermarket.description}</p>
-              )}
-            </div>
-          </div>
-        </header>
+      {/* ── Hero ── */}
+      <div className={styles.hero}>
+        {supermarket.logo_url ? (
+          <Image
+            src={supermarket.logo_url}
+            alt={supermarket.name}
+            fill
+            sizes="100vw"
+            style={{ objectFit: "cover", objectPosition: "center" }}
+            priority
+          />
+        ) : (
+          <div className={styles.heroFallback} />
+        )}
+        <div className={styles.heroOverlay} />
+        <div className={`${styles.heroContent} container`}>
+          <Link href="/supermercados" className={styles.back}>
+            <ArrowLeft size={18} /> Todos os supermercados
+          </Link>
+          <h1 className={styles.heroName}>{supermarket.name}</h1>
+        </div>
+      </div>
+
+      {/* ── Info ── */}
+      <div className="container">
+        <div className={styles.infoBar}>
+          {supermarket.address && (
+            <span className={styles.infoItem}>
+              <MapPin size={15} /> {supermarket.address}
+            </span>
+          )}
+          {supermarket.phone && (
+            <span className={styles.infoItem}>
+              <Phone size={15} /> {supermarket.phone}
+            </span>
+          )}
+          {flyer && (
+            <span className={`${styles.infoItem} ${styles.infoFlyer}`}>
+              <CalendarDays size={15} /> Encarte válido: {formatDateRange(flyer.valid_from, flyer.valid_until)}
+            </span>
+          )}
+          {supermarket.description && (
+            <p className={styles.desc}>{supermarket.description}</p>
+          )}
+        </div>
 
         {!flyer ? (
           <div className={styles.noFlyer}>
