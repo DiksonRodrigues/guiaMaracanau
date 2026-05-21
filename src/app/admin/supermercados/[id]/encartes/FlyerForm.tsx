@@ -46,8 +46,9 @@ function getImageInfo(file: File): Promise<{ width: number; height: number; prev
 }
 
 function classifyQuality(w: number, h: number): PagePreview["quality"] {
-  if (w >= 1800 && h >= 2400) return "good";
-  if (w >= 900 && h >= 1200) return "ok";
+  const mp = w * h;
+  if (mp >= 2_000_000) return "good"; // Full HD e acima
+  if (mp >= 500_000) return "ok";     // ~800×640 e acima
   return "bad";
 }
 
@@ -60,18 +61,18 @@ const QUALITY_CONFIG = {
     tip: "Imagem vai ficar nítida.",
   },
   ok: {
-    label: "Qualidade mínima",
+    label: "Qualidade aceitável",
     color: "#d97706",
     bg: "#fef3c7",
     icon: AlertTriangle,
-    tip: "Aceitável, mas pode ficar um pouco pixelada. Tente uma foto com mais resolução.",
+    tip: "Pode ficar levemente pixelada. Se possível, use uma foto com maior resolução (Full HD ou mais).",
   },
   bad: {
     label: "Baixa qualidade",
     color: "#dc2626",
     bg: "#fee2e2",
     icon: XCircle,
-    tip: "Imagem muito pequena — vai ficar borrada para o cliente. Substitua por uma foto melhor.",
+    tip: "Resolução muito baixa — vai ficar borrada. Use câmera traseira do celular ou escaneado em 300 DPI.",
   },
 };
 
