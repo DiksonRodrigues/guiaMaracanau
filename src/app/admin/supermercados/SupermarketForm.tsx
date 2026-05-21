@@ -11,6 +11,7 @@ type SupermarketData = {
   name: string;
   slug: string;
   logo_url: string;
+  cover_url: string;
   description: string;
   address: string;
   phone: string;
@@ -18,7 +19,7 @@ type SupermarketData = {
 };
 
 const empty: SupermarketData = {
-  name: "", slug: "", logo_url: "", description: "", address: "", phone: "", active: true,
+  name: "", slug: "", logo_url: "", cover_url: "", description: "", address: "", phone: "", active: true,
 };
 
 function toSlug(name: string): string {
@@ -32,9 +33,10 @@ function toSlug(name: string): string {
 export default function SupermarketForm({ initial }: { initial?: SupermarketData }) {
   const isEdit = !!initial?.id;
   const router = useRouter();
-  const [form, setForm] = useState<SupermarketData>(initial ?? empty);
+  const [form, setForm] = useState<SupermarketData>({ ...empty, ...initial });
   const [slugManual, setSlugManual] = useState(isEdit);
-  const [uploading, setUploading] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -47,14 +49,28 @@ export default function SupermarketForm({ initial }: { initial?: SupermarketData
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading(true);
+    setUploadingLogo(true);
     try {
       const url = await uploadImage(file, "supermarkets");
       set("logo_url", url);
     } catch (err: any) {
       setError(err.message);
     } finally {
-      setUploading(false);
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingCover(true);
+    try {
+      const url = await uploadImage(file, "supermarkets/covers");
+      set("cover_url", url);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setUploadingCover(false);
     }
   };
 
@@ -152,20 +168,58 @@ export default function SupermarketForm({ initial }: { initial?: SupermarketData
             />
           </div>
 
-          <div className={`${styles.field} ${styles.formFull}`}>
-            <label className={styles.label}>Logo</label>
+          {/* Logo */}
+          <div className={styles.field}>
+            <label className={styles.label}>
+              Logo
+              <span style={{ fontWeight: 400, color: "var(--text-muted)", marginLeft: "0.5rem", fontSize: "0.78rem" }}>
+                400×400px, fundo transparente
+              </span>
+            </label>
             <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
               {form.logo_url && (
-                <img src={form.logo_url} alt="logo" style={{ width: 64, height: 64, objectFit: "contain", borderRadius: 8, border: "1px solid #e2e8f0", background: "#f8fafc" }} />
+                <img src={form.logo_url} alt="logo" style={{ width: 56, height: 56, objectFit: "contain", borderRadius: 8, border: "1px solid #e2e8f0", background: "#f8fafc" }} />
               )}
               <label className={`${styles.btn} ${styles.btnOutline}`} style={{ cursor: "pointer" }}>
-                {uploading ? <><Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> Enviando...</> : <><Upload size={14} /> Upload logo</>}
+                {uploadingLogo
+                  ? <><Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> Enviando...</>
+                  : <><Upload size={14} /> Upload logo</>}
                 <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: "none" }} />
               </label>
             </div>
           </div>
 
+          {/* Foto de capa */}
           <div className={styles.field}>
+            <label className={styles.label}>
+              Foto de capa (hero)
+              <span style={{ fontWeight: 400, color: "var(--text-muted)", marginLeft: "0.5rem", fontSize: "0.78rem" }}>
+                1920×800px recomendado
+              </span>
+            </label>
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+              {form.cover_url && (
+                <img src={form.cover_url} alt="capa" style={{ width: 120, height: 56, objectFit: "cover", borderRadius: 8, border: "1px solid #e2e8f0" }} />
+              )}
+              <label className={`${styles.btn} ${styles.btnOutline}`} style={{ cursor: "pointer" }}>
+                {uploadingCover
+                  ? <><Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> Enviando...</>
+                  : <><Upload size={14} /> Upload capa</>}
+                <input type="file" accept="image/*" onChange={handleCoverUpload} style={{ display: "none" }} />
+              </label>
+              {form.cover_url && (
+                <button
+                  type="button"
+                  onClick={() => set("cover_url", "")}
+                  style={{ fontSize: "0.78rem", color: "#ef4444", background: "none", border: "none", cursor: "pointer" }}
+                >
+                  Remover
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className={`${styles.field} ${styles.formFull}`}>
             <label className={styles.checkboxRow}>
               <input type="checkbox" checked={form.active} onChange={(e) => set("active", e.target.checked)} />
               Supermercado ativo (visível no site)
@@ -181,7 +235,7 @@ export default function SupermarketForm({ initial }: { initial?: SupermarketData
         <button
           className={`${styles.btn} ${styles.btnPrimary}`}
           onClick={handleSubmit}
-          disabled={loading || uploading}
+          disabled={loading || uploadingLogo || uploadingCover}
           style={{ minWidth: 180, justifyContent: "center" }}
         >
           {loading
