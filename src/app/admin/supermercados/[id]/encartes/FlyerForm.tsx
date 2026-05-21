@@ -209,7 +209,8 @@ export default function FlyerForm({
           <input type="file" accept="image/*" multiple onChange={handlePageUpload} style={{ display: "none" }} disabled={uploadingPage} />
         </label>
         <p style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "0.5rem" }}>
-          Selecione múltiplas imagens de uma vez. Ordem de upload = ordem das páginas.
+          Selecione múltiplas imagens de uma vez. Ordem de upload = ordem das páginas.<br />
+          Padrão: <strong>900×1200px (retrato), WebP, &lt;500KB por página.</strong>
         </p>
       </div>
 
