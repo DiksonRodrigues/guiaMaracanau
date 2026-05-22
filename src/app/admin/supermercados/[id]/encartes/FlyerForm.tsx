@@ -43,10 +43,63 @@ export default function FlyerForm({
   );
   const [highlights, setHighlights] = useState<Highlight[]>(initial?.flyer_highlights ?? []);
   const [uploadingPage, setUploadingPage] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState<{ current: number; total: number } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const set = (k: keyof FlyerData, v: any) => setForm((f) => ({ ...f, [k]: v }));
+
+  // ── PDF → imagens de alta resolução ───────────────────
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || file.type !== "application/pdf") return;
+    e.target.value = "";
+
+    setUploadingPage(true);
+    setError("");
+
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+
+      const pdfjsLib = await import("pdfjs-dist");
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const numPages = pdf.numPages;
+      const urls: string[] = [];
+
+      for (let i = 1; i <= numPages; i++) {
+        setPdfProgress({ current: i, total: numPages });
+
+        const page = await pdf.getPage(i);
+        // scale 2.5 → ~1500px largura em A4 padrão (595pt × 2.5 ≈ 1487px)
+        const viewport = page.getViewport({ scale: 2.5 });
+
+        const canvas = document.createElement("canvas");
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        const ctx = canvas.getContext("2d")!;
+        await page.render({ canvasContext: ctx, viewport, canvas }).promise;
+
+        const blob = await new Promise<Blob>((resolve, reject) =>
+          canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Falha ao converter página"))), "image/jpeg", 0.92)
+        );
+
+        const pageFile = new File([blob], `pagina-${i}.jpg`, { type: "image/jpeg" });
+        const url = await uploadImage(pageFile, "flyers");
+        urls.push(url);
+      }
+
+      setForm((prev) => ({ ...prev, pages: [...prev.pages, ...urls] }));
+    } catch (err: any) {
+      setError(`Erro ao processar PDF: ${err.message}`);
+    } finally {
+      setUploadingPage(false);
+      setPdfProgress(null);
+    }
+  };
 
   // ── Páginas do encarte ─────────────────────────────────
   const handlePageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -202,14 +255,24 @@ export default function FlyerForm({
           </div>
         )}
 
-        <label className={`${styles.btn} ${styles.btnOutline}`} style={{ cursor: "pointer", width: "fit-content" }}>
-          {uploadingPage
-            ? <><Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> Enviando...</>
-            : <><Upload size={14} /> Adicionar páginas</>}
-          <input type="file" accept="image/*" multiple onChange={handlePageUpload} style={{ display: "none" }} disabled={uploadingPage} />
-        </label>
+        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
+          <label className={`${styles.btn} ${styles.btnOutline}`} style={{ cursor: "pointer" }}>
+            {uploadingPage && !pdfProgress
+              ? <><Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> Enviando...</>
+              : <><Upload size={14} /> Adicionar imagens</>}
+            <input type="file" accept="image/*" multiple onChange={handlePageUpload} style={{ display: "none" }} disabled={uploadingPage} />
+          </label>
+
+          <label className={`${styles.btn} ${styles.btnOutline}`} style={{ cursor: "pointer" }}>
+            {pdfProgress
+              ? <><Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> Página {pdfProgress.current}/{pdfProgress.total}...</>
+              : <><Upload size={14} /> Carregar PDF do encarte</>}
+            <input type="file" accept=".pdf,application/pdf" onChange={handlePdfUpload} style={{ display: "none" }} disabled={uploadingPage} />
+          </label>
+        </div>
+
         <p style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "0.5rem" }}>
-          Selecione múltiplas imagens de uma vez. Ordem de upload = ordem das páginas.
+          Use <strong>PDF</strong> para melhor qualidade — cada página vira uma imagem de alta resolução automaticamente.
         </p>
       </div>
 
