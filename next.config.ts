@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["pdfjs-dist"],
   images: {
     remotePatterns: [
       {
@@ -11,6 +12,10 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "images.openfoodfacts.org",
       },
     ],
     formats: ["image/avif", "image/webp"],
