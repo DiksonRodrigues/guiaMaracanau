@@ -8,28 +8,42 @@ import * as LucideIcons from "lucide-react";
 import FloatingSearch from "@/components/FloatingSearch/FloatingSearch";
 import BannerCarousel from "@/components/BannerCarousel/BannerCarousel";
 import BusinessFeed from "@/components/BusinessFeed/BusinessFeed";
+import { Suspense } from "react";
+import NeighborhoodFilter from "@/components/NeighborhoodFilter/NeighborhoodFilter";
+import { supabase } from "@/lib/supabase";
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams?: Promise<{ bairros?: string }>;
+}) {
+  const sp = searchParams ? await searchParams : {};
+  const activeSlugs = sp.bairros ? sp.bairros.split(",").filter(Boolean) : [];
+
+  let neighborhoodIds: string[] | undefined;
+  if (activeSlugs.length > 0) {
+    const { data: hoods } = await supabase
+      .from("neighborhoods")
+      .select("id, slug")
+      .in("slug", activeSlugs)
+      .eq("is_active", true);
+    neighborhoodIds = (hoods ?? []).map((h: { id: string }) => h.id);
+  }
+
   const [categories, featuredBusinesses, initialBusinesses, supermarkets, neighborhoods] = await Promise.all([
     getCategories(),
     getFeaturedBusinesses().catch(() => []),
-    getBusinessesPaginated(0, 12).catch(() => []),
+    getBusinessesPaginated(0, 12, neighborhoodIds).catch(() => []),
     getSupermarkets().catch(() => []),
     getNeighborhoodsWithCount().catch(() => []),
   ]);
-  const topNeighborhoods = neighborhoods
-    .sort((a: any, b: any) => b.business_count - a.business_count)
-    .slice(0, 5);
+
   const activeFlyerCount = supermarkets.filter((s: any) => s.activeFlyer).length;
 
   return (
     <div className={styles.homePage}>
-      {/* Lupa Flutuante - fixa na tela */}
       <FloatingSearch />
-
-      {/* Banner Carousel */}
       <BannerCarousel businesses={featuredBusinesses} />
-
 
       {/* Categories Section */}
       <section className={`${styles.categories} section`}>
@@ -40,10 +54,10 @@ export default async function Home() {
               // @ts-ignore
               const IconComponent = LucideIcons[cat.icon_name] || LucideIcons.HelpCircle;
               return (
-                <Link 
-                  href={`/categories/${cat.slug}`} 
-                  key={cat.id} 
-                  className={`${styles.categoryItem} glass-card animate-fade`} 
+                <Link
+                  href={`/categories/${cat.slug}`}
+                  key={cat.id}
+                  className={`${styles.categoryItem} glass-card animate-fade`}
                   style={{ animationDelay: `${i * 0.1}s` }}
                 >
                   <div className={styles.categoryIcon} style={{ color: cat.color }}>
@@ -56,25 +70,6 @@ export default async function Home() {
           </div>
         </div>
       </section>
-
-      {/* Neighborhood Chips */}
-      {topNeighborhoods.length > 0 && (
-        <section className={styles.neighborhoodStrip}>
-          <div className="container">
-            <div className={styles.neighborhoodChips}>
-              <span className={styles.neighborhoodLabel}>Explorar por bairro:</span>
-              {topNeighborhoods.map((n: any) => (
-                <Link key={n.id} href={`/bairros/${n.slug}`} className={styles.neighborhoodChip}>
-                  {n.name}
-                </Link>
-              ))}
-              <Link href="/bairros" className={styles.neighborhoodChipMore}>
-                Ver todos →
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Coupon Teaser */}
       <section className={styles.couponTeaser}>
@@ -114,10 +109,18 @@ export default async function Home() {
         </section>
       )}
 
-      {/* Business Feed com infinite scroll */}
+      {/* Business Feed com filtro de bairro */}
       <section className={`${styles.featured} section`}>
         <div className="container">
-          <BusinessFeed initial={initialBusinesses} featured={featuredBusinesses} />
+          {neighborhoods.length > 0 && (
+            <Suspense fallback={null}>
+              <NeighborhoodFilter
+                neighborhoods={neighborhoods}
+                active={activeSlugs}
+              />
+            </Suspense>
+          )}
+          <BusinessFeed initial={initialBusinesses} featured={featuredBusinesses} neighborhoodIds={neighborhoodIds} />
         </div>
       </section>
     </div>

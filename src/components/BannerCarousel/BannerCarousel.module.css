@@ -1,6 +1,6 @@
 .wrapper {
   position: relative;
-  width: calc(100% - 3rem);
+  width: calc(100% - 1rem);
   height: 420px;
   overflow: hidden;
   border-radius: 16px;
