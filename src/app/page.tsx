@@ -120,7 +120,7 @@ export default async function Home({
               />
             </Suspense>
           )}
-          <BusinessFeed initial={initialBusinesses} neighborhoodIds={neighborhoodIds} />
+          <BusinessFeed initial={initialBusinesses} featured={featuredBusinesses} neighborhoodIds={neighborhoodIds} />
         </div>
       </section>
     </div>

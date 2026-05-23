@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { MapPin, Star, Loader2 } from "lucide-react";
 import { cityConfig } from "@/config/city";
 import styles from "../../app/page.module.css";
 import BusinessCardImage from "@/components/BusinessCardImage/BusinessCardImage";
+import BannerCarousel from "@/components/BannerCarousel/BannerCarousel";
 
 type Business = {
   id: string;
@@ -20,13 +21,26 @@ type Business = {
   neighborhoods?: { name: string; slug: string } | { name: string; slug: string }[] | null;
 };
 
+type FeaturedBusiness = {
+  id: string;
+  name: string;
+  slug: string;
+  image_url: string;
+  description: string;
+  discount_label?: string | null;
+  categories?: { name: string };
+};
+
 const PAGE = 12;
+const BANNER_INTERVAL = 6;
 
 export default function BusinessFeed({
   initial,
+  featured = [],
   neighborhoodIds,
 }: {
   initial: Business[];
+  featured?: FeaturedBusiness[];
   neighborhoodIds?: string[];
 }) {
   const [items, setItems] = useState<Business[]>(initial);
@@ -79,36 +93,48 @@ export default function BusinessFeed({
     <>
       <div className={styles.featuredGrid}>
         {items.map((biz, i) => (
-          <Link
-            href={`/business/${biz.slug}`}
-            key={biz.id}
-            className={`${styles.featuredCard} glass-card animate-fade`}
-            style={{ animationDelay: `${Math.min(i, 5) * 0.08}s` }}
-          >
-            {biz.discount_label && (
-              <span className={styles.discountBadge}>{biz.discount_label}</span>
+          <React.Fragment key={biz.id}>
+            {i > 0 && i % BANNER_INTERVAL === 0 && featured.length > 0 && (
+              <div style={{ gridColumn: "1 / -1", margin: "0.5rem 0 1.5rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+                  <span style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--accent)", border: "1px solid var(--accent)", borderRadius: "100px", padding: "0.15rem 0.6rem" }}>
+                    Destaques
+                  </span>
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted, #888)" }}>Estabelecimentos em destaque</span>
+                </div>
+                <BannerCarousel businesses={featured} fullWidth />
+              </div>
             )}
-            <BusinessCardImage url={biz.image_url} name={biz.name} />
-            <div className={styles.cardContent}>
-              <div className={styles.cardHeader}>
-                <h3 className={styles.cardTitle}>{biz.name}</h3>
-                <div className={styles.cardRating}>
-                  <Star size={14} fill="currentColor" />
-                  <span>{Number(biz.rating).toFixed(1)}</span>
+            <Link
+              href={`/business/${biz.slug}`}
+              className={`${styles.featuredCard} glass-card animate-fade`}
+              style={{ animationDelay: `${Math.min(i, 5) * 0.08}s` }}
+            >
+              {biz.discount_label && (
+                <span className={styles.discountBadge}>{biz.discount_label}</span>
+              )}
+              <BusinessCardImage url={biz.image_url} name={biz.name} />
+              <div className={styles.cardContent}>
+                <div className={styles.cardHeader}>
+                  <h3 className={styles.cardTitle}>{biz.name}</h3>
+                  <div className={styles.cardRating}>
+                    <Star size={14} fill="currentColor" />
+                    <span>{Number(biz.rating).toFixed(1)}</span>
+                  </div>
+                </div>
+                <p className={styles.cardDesc}>{biz.description}</p>
+                <div className={styles.cardFooter}>
+                  <span className={styles.cardTag}>
+                    {Array.isArray(biz.categories) ? biz.categories[0]?.name : (biz.categories as any)?.name}
+                  </span>
+                  <span className={styles.cardLocation}>
+                    <MapPin size={12} />
+                    {(Array.isArray(biz.neighborhoods) ? biz.neighborhoods[0]?.name : (biz.neighborhoods as any)?.name) ?? cityConfig.name}
+                  </span>
                 </div>
               </div>
-              <p className={styles.cardDesc}>{biz.description}</p>
-              <div className={styles.cardFooter}>
-                <span className={styles.cardTag}>
-                  {Array.isArray(biz.categories) ? biz.categories[0]?.name : (biz.categories as any)?.name}
-                </span>
-                <span className={styles.cardLocation}>
-                  <MapPin size={12} />
-                  {(Array.isArray(biz.neighborhoods) ? biz.neighborhoods[0]?.name : (biz.neighborhoods as any)?.name) ?? cityConfig.name}
-                </span>
-              </div>
-            </div>
-          </Link>
+            </Link>
+          </React.Fragment>
         ))}
       </div>
 
