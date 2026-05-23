@@ -117,7 +117,7 @@ export default async function Home() {
       {/* Business Feed com infinite scroll */}
       <section className={`${styles.featured} section`}>
         <div className="container">
-          <BusinessFeed initial={initialBusinesses} />
+          <BusinessFeed initial={initialBusinesses} featured={featuredBusinesses} />
         </div>
       </section>
     </div>

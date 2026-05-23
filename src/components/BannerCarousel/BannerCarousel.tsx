@@ -16,7 +16,7 @@ type Business = {
   categories?: { name: string };
 };
 
-export default function BannerCarousel({ businesses }: { businesses: Business[] }) {
+export default function BannerCarousel({ businesses, fullWidth }: { businesses: Business[]; fullWidth?: boolean }) {
   const slides = businesses.slice(0, 5);
   const [current, setCurrent] = useState(0);
 
@@ -28,7 +28,7 @@ export default function BannerCarousel({ businesses }: { businesses: Business[] 
   }, [next]);
 
   return (
-    <div className={styles.wrapper}>
+    <div className={styles.wrapper} style={fullWidth ? { width: "100%", margin: 0 } : undefined}>
       <div className={styles.track}>
         {slides.map((biz, i) => (
           <Link
