@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+﻿import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import AdminShell from "@/components/AdminShell/AdminShell";
 import BusinessForm from "../BusinessForm";
 import styles from "../../admin.module.css";

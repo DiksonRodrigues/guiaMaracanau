@@ -9,8 +9,9 @@ export async function requireAdminAuth(req: NextRequest): Promise<NextResponse |
 }
 
 export async function computeToken(): Promise<string> {
-  const secret = process.env.ADMIN_SESSION_SECRET ?? "changeme";
-  const password = process.env.ADMIN_PASSWORD ?? "";
+  const secret = process.env.ADMIN_SESSION_SECRET;
+  if (!secret) throw new Error("ADMIN_SESSION_SECRET não configurado");
+  const password = process.env.ADMIN_PASSWORD;
   const key = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(secret),

@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import { notFound } from "next/navigation";
 import AdminShell from "@/components/AdminShell/AdminShell";
 import Link from "next/link";
