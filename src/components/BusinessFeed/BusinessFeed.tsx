@@ -95,14 +95,58 @@ export default function BusinessFeed({
         {items.map((biz, i) => (
           <React.Fragment key={biz.id}>
             {i > 0 && i % BANNER_INTERVAL === 0 && featured.length > 0 && (
-              <div style={{ gridColumn: "1 / -1", margin: "0.5rem 0 1.5rem" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
-                  <span style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--accent)", border: "1px solid var(--accent)", borderRadius: "100px", padding: "0.15rem 0.6rem" }}>
-                    Destaques
-                  </span>
-                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted, #888)" }}>Estabelecimentos em destaque</span>
+              <div style={{
+                gridColumn: "1 / -1",
+                margin: "1.5rem 0 0.5rem",
+                background: "linear-gradient(160deg, rgba(91,33,182,0.06) 0%, rgba(14,165,233,0.04) 100%)",
+                border: "1.5px solid rgba(91, 33, 182, 0.18)",
+                borderRadius: "20px",
+                padding: "1.25rem 1.25rem 1.5rem",
+                boxShadow: "0 4px 24px -4px rgba(91, 33, 182, 0.1)",
+              }}>
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.6rem",
+                  marginBottom: "1rem",
+                  paddingBottom: "0.9rem",
+                  borderBottom: "1px solid rgba(91, 33, 182, 0.12)",
+                }}>
+                  <div style={{
+                    background: "linear-gradient(135deg, var(--primary), var(--secondary))",
+                    borderRadius: "10px",
+                    width: 36, height: 36,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0,
+                    boxShadow: "0 4px 12px rgba(91,33,182,0.35)",
+                    position: "relative",
+                    overflow: "hidden",
+                  }}>
+                    <div style={{
+                      position: "absolute", inset: 0,
+                      background: "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.18) 50%, transparent 60%)",
+                      animation: "featuredShimmer 3s ease-in-out infinite",
+                      pointerEvents: "none",
+                    }} />
+                    <Star size={18} fill="white" color="white" />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: "1rem", fontWeight: 800, color: "var(--primary)", letterSpacing: "-0.01em", lineHeight: 1.2 }}>
+                      Destaques
+                    </p>
+                    <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.1rem" }}>
+                      Estabelecimentos recomendados em {cityConfig.name}
+                    </p>
+                  </div>
                 </div>
                 <BannerCarousel businesses={featured} fullWidth />
+                <style>{`
+                  @keyframes featuredShimmer {
+                    0%   { transform: translateX(-100%); }
+                    60%  { transform: translateX(200%); }
+                    100% { transform: translateX(200%); }
+                  }
+                `}</style>
               </div>
             )}
             <Link
