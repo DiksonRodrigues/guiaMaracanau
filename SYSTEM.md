@@ -94,7 +94,7 @@ NEXT_PUBLIC_SITE_URL=https://guiamaracanau.com.br
 ## 4. Estrutura de Diretórios
 
 ```
-GuiaDesconto/
+GuiaMaracanau/
 ├── src/
 │   ├── app/                        # Rotas Next.js App Router
 │   │   ├── page.tsx                # Home

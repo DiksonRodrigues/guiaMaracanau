@@ -36,7 +36,7 @@ function formatExpiry(dateStr: string) {
 function buildWhatsAppUrl(whatsapp: string, code: string, discountLabel: string) {
   const phone = whatsapp.replace(/\D/g, "");
   const msg = encodeURIComponent(
-    `Olá! Vim pelo GuiaDesconto e quero usar o cupom *${code}* — ${discountLabel} 😊`
+    `Olá! Vim pelo GuiaMaracanau e quero usar o cupom *${code}* — ${discountLabel} 😊`
   );
   return `https://wa.me/55${phone}?text=${msg}`;
 }
